@@ -29,7 +29,7 @@ colnames(Dcrime[5:15])
 Dcrime <- Dcrime[5:15]
 
 # Only for 2022 Offense.Start.DateTime
-Dcrime22 <- Dcrime # %>% filter(str_detect(Report.DateTime, "2022"))
+Dcrime22 <- Dcrime %>% filter(str_detect(Report.DateTime, "2022"))
 
 table(Dcrime22$Crime.Against.Category)
 # NOT_A_CRIME      PERSON    PROPERTY     SOCIETY 
