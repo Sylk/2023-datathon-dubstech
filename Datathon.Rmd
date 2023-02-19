@@ -13,7 +13,7 @@ library(dplyr)
 library(stringr)
 
 #loading data
-Dcrime <- read.csv("Crime.csv", header = TRUE)
+Dcrime <- read.csv("csv/BaseCrimeData2008-2023.csv", header = TRUE)
 DcrimeOriginal <- Dcrime #original without any cleaning
 
 
@@ -29,7 +29,7 @@ colnames(Dcrime[5:15])
 Dcrime <- Dcrime[5:15]
 
 # Only for 2022 Offense.Start.DateTime
-Dcrime22 <- Dcrime %>% filter(str_detect(Report.DateTime, "2022"))
+Dcrime22 <- Dcrime # %>% filter(str_detect(Report.DateTime, "2022"))
 
 table(Dcrime22$Crime.Against.Category)
 # NOT_A_CRIME      PERSON    PROPERTY     SOCIETY 
@@ -111,7 +111,7 @@ Matix22 <- pivot_wider(Group22, names_from = Offense.Parent.Group, values_from =
 
 #Removing CAP HILL 9th row, UNKNOWN 59th row
 Matix22 <- Matix22[-c(9, 59), ]
-write.csv(Matix22, "Matix22.csv")
+write.csv(Matix22, "csv/Matix22.csv")
  
 
 
@@ -124,7 +124,7 @@ Least <- Matix22[cols_least_n]
 # binding column for area name
 Least <- cbind(Matix22$MCPP, Least)
 colnames(Least)[1] <- "MCPP"
-write.csv(Least, "Least.csv")
+write.csv(Least, "csv/Least.csv")
 
 
 # Cluster 2: Moderately serious crimes
@@ -135,7 +135,7 @@ Moderate <- Matix22[cols_moderate_n]
 # binding column for area name
 Moderate <- cbind(Matix22$MCPP, Moderate)
 colnames(Moderate)[1] <- "MCPP"
-write.csv(Moderate, "Moderate.csv")
+write.csv(Moderate, "csv/Moderate.csv")
 
 # Cluster 3: Most  serious crimes
 cols_most <- c("ARSON", "ASSAULT OFFENSES", "BURGLARY/BREAKING&ENTERING", "DRIVING UNDER THE INFLUENCE", "DRUG/NARCOTIC OFFENSES", "EXTORTION/BLACKMAIL", "HOMICIDE OFFENSES", "HUMAN TRAFFICKING", "MOTOR VEHICLE THEFT", "PEEPING TOM", "ROBBERY", "SEX OFFENSES", "SEX OFFENSES, CONSENSUAL", "WEAPON LAW VIOLATIONS")
@@ -145,16 +145,16 @@ Most <- Matix22[cols_most_n]
 # binding column for area name
 Most <- cbind(Matix22$MCPP, Most)
 colnames(Most)[1] <- "MCPP"
-write.csv(Most, "Most.csv")
+write.csv(Most, "csv/Most.csv")
 
 
 
 #loading data for least, moderate, most serious crime in 2022
-Most <- read.csv("Most.csv", header = TRUE)
+Most <- read.csv("csv/Most.csv", header = TRUE)
 Most <- Most[2:ncol(Most)]
-Moderate <- read.csv("Moderate.csv", header = TRUE)
+Moderate <- read.csv("csv/Moderate.csv", header = TRUE)
 Moderate <- Moderate[2:ncol(Moderate)]
-Least <- read.csv("Least.csv", header = TRUE)
+Least <- read.csv("csv/Least.csv", header = TRUE)
 Least <- Least[2:ncol(Least)]
 
 # compute sum of all column for each row
@@ -180,7 +180,7 @@ Matix22 <- arrange(Matix22, MCPP)
 
 # geo shapfile loading
 library(sf)
-my_shapefile <- st_read("Micro_Community_Policing_Plans.shp")
+my_shapefile <- st_read("shape/Micro_Community_Policing_Plans.shp")
 plot(my_shapefile)
 my_shapefile <- arrange(my_shapefile, NEIGHBORHO)
 
@@ -197,7 +197,7 @@ Matix22 <- Matix22 %>%
 #arrange by Mcpp name
 Matix22 <- arrange(Matix22, MCPP_adj)
 
-write.csv(Matix22, "Matix22.csv")
+write.csv(Matix22, "csv/Matix22.csv")
 
 data <- as.data.frame(cbind(my_shapefile$NEIGHBORHO, Matix22$MCPP_adj))
 # check if col1 and col2 values match in each row
