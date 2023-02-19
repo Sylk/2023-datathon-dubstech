@@ -1,0 +1,175 @@
+---
+title: "Datathon"
+output: pdf_document
+date: "2023-02-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(stringr)
+
+#loading data
+Dcrime <- read.csv("Crime.csv", header = TRUE)
+DcrimeOriginal <- Dcrime #original without any cleaning
+
+
+# Checking Empty date for Start, end, report date of crime
+EmptyEnd <- Dcrime %>% filter(Offense.End.DateTime == "") #452006 obs
+EmptyStart <- Dcrime %>% filter(Offense.Start.DateTime == "") #1203 obs
+EmptyReport <- Dcrime %>% filter(Report.DateTime == "") #0 obs
+# we will use Report.DateTime for Date
+
+#selecting necessary columns
+colnames(Dcrime)
+colnames(Dcrime[5:15])
+Dcrime <- Dcrime[5:15]
+
+# Only for 2022 Offense.Start.DateTime
+Dcrime22 <- Dcrime %>% filter(str_detect(Report.DateTime, "2022"))
+
+table(Dcrime22$Crime.Against.Category)
+table(Dcrime22$Offense)
+
+table(Dcrime22$Offense.Parent.Group)
+names(table(Dcrime22$Offense.Parent.Group)) #31 -- we will use this.
+names(table(Dcrime$Offense)) #59
+
+#looking at areas if we have NA MCPP
+table(Dcrime22$MCPP)
+```
+
+One way to cluster the crimes into three different groups based on how serious they are could be:
+
+Cluster 1: Least serious crimes
+
+CURFEW/LOITERING/VAGRANCY VIOLATIONS
+DRUNKENNESS
+FAMILY OFFENSES, NONVIOLENT
+FRAUD OFFENSES
+GAMBLING OFFENSES
+LIQUOR LAW VIOLATIONS
+PORNOGRAPHY/OBSCENE MATERIAL
+PROSTITUTION OFFENSES
+TRESPASS OF REAL PROPERTY
+
+
+Cluster 2: Moderately serious crimes
+
+ANIMAL CRUELTY
+BAD CHECKS
+COUNTERFEITING/FORGERY
+DESTRUCTION/DAMAGE/VANDALISM OF PROPERTY
+EMBEZZLEMENT
+KIDNAPPING/ABDUCTION
+LARCENY-THEFT
+STOLEN PROPERTY OFFENSES
+
+
+Cluster 3: Most serious crimes
+
+ARSON
+ASSAULT OFFENSES
+BURGLARY/BREAKING&ENTERING
+DRIVING UNDER THE INFLUENCE
+DRUG/NARCOTIC OFFENSES
+EXTORTION/BLACKMAIL
+HOMICIDE OFFENSES
+HUMAN TRAFFICKING
+MOTOR VEHICLE THEFT
+PEEPING TOM
+ROBBERY
+SEX OFFENSES
+SEX OFFENSES, CONSENSUAL
+WEAPON LAW VIOLATIONS
+
+Of course, this is just one possible way to cluster the crimes and other criteria or methods could be used depending on the context and the purpose of the analysis.
+
+
+```{r}
+
+Group22 <- Dcrime22 %>% 
+  group_by(MCPP, Offense.Parent.Group) %>% 
+  summarize(n = n(), .groups = "drop")
+
+Group22 <- slice(Group22, -1) #Removing NA MCPP
+
+head(Group22)
+
+
+library(tidyr)
+Matix22 <- pivot_wider(Group22, names_from = Offense.Parent.Group, values_from = n, values_fill = 0) # looking at all crime numbers (column) * MCPP (row)
+
+Matix22 <- Matix22[-c(9, 59), ]
+ #Removing CAP HILL 9th row, UNKNOWN 59th row
+
+
+# Cluster 1: Least serious crimes
+cols_least <- c("CURFEW/LOITERING/VAGRANCY VIOLATIONS", "DRUNKENNESS", "FAMILY OFFENSES, NONVIOLENT", "FRAUD OFFENSES", "GAMBLING OFFENSES", "LIQUOR LAW VIOLATIONS", "PORNOGRAPHY/OBSCENE MATERIAL", "PROSTITUTION OFFENSES", "TRESPASS OF REAL PROPERTY")
+
+cols_least_n <- grep(paste(cols_least, collapse="|"), colnames(Matix22)) 
+Least <- Matix22[cols_least_n]
+
+# binding column for area name
+Least <- cbind(Matix22$MCPP, Least)
+colnames(Least)[1] <- "MCPP"
+write.csv(Least, "Least.csv")
+
+
+# Cluster 2: Moderately serious crimes
+cols_moderate <- c("ANIMAL CRUELTY", "BAD CHECKS", "COUNTERFEITING/FORGERY", "DESTRUCTION/DAMAGE/VANDALISM OF PROPERTY", "EMBEZZLEMENT", "KIDNAPPING/ABDUCTION", "LARCENY-THEFT", "STOLEN PROPERTY OFFENSES")
+
+cols_moderate_n <- grep(paste(cols_moderate, collapse="|"), colnames(Matix22)) 
+Moderate <- Matix22[cols_moderate_n]
+# binding column for area name
+Moderate <- cbind(Matix22$MCPP, Moderate)
+colnames(Moderate)[1] <- "MCPP"
+write.csv(Moderate, "Moderate.csv")
+
+# Cluster 3: Most  serious crimes
+cols_most <- c("ARSON", "ASSAULT OFFENSES", "BURGLARY/BREAKING&ENTERING", "DRIVING UNDER THE INFLUENCE", "DRUG/NARCOTIC OFFENSES", "EXTORTION/BLACKMAIL", "HOMICIDE OFFENSES", "HUMAN TRAFFICKING", "MOTOR VEHICLE THEFT", "PEEPING TOM", "ROBBERY", "SEX OFFENSES", "SEX OFFENSES, CONSENSUAL", "WEAPON LAW VIOLATIONS")
+
+cols_most_n <- grep(paste(cols_most, collapse="|"), colnames(Matix22)) 
+Most <- Matix22[cols_most_n]
+# binding column for area name
+Most <- cbind(Matix22$MCPP, Most)
+colnames(Most)[1] <- "MCPP"
+write.csv(Most, "Most.csv")
+
+
+
+
+
+my_shapefile <- arrange(my_shapefile, NEIGHBORHO)
+
+
+
+
+Matix22 <- Matix22 %>%
+  mutate(Serious == ifelse())
+
+
+# Set row names to MCPP column
+row.names(new_df) <- new_df$MCPP
+
+
+Unknown <- Dcrime %>% filter(MCPP == "UNKNOWN")
+table(Dcrime$Beat)
+
+U1 <- Dcrime %>% filter(Beat == "U1")
+
+library(sf)
+my_shapefile <- st_read("Micro_Community_Policing_Plans.shp")
+plot(my_shapefile)
+d1 <- as.list(my_shapefile$NEIGHBORHO)
+d2 <- as.list(Dcrime$MCPP)
+do.call(paste0, d1) %in% do.call(paste0, d2)
+
+
+
+max(Dcrime$Report.DateTime)
+
+```
